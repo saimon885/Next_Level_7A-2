@@ -20,6 +20,21 @@ export const initDB = async () => {
       )
     `);
 
+    await pool.query(`CREATE TABLE IF NOT EXISTS issues(
+        id SERIAL PRIMARY KEY,
+        title VARCHAR(150) NOT NULL,
+        description TEXT NOT NULL,
+        type VARCHAR(30) NOT NULL
+         CHECK(type IN('bug', 'feature_request')),
+        status VARCHAR(30) DEFAULT 'open' NOT NULL
+         CHECK(status IN('open', 'in_progress', 'resolved')),
+        reporter_id INTEGER NOT NULL,
+
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+        )`);
+
     console.log("Users table created successfully");
   } catch (error) {
     console.error("Database creation failed:", error);

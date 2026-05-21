@@ -2,6 +2,7 @@ import { pool } from "../../db/db.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import type { IcreateUser, IsignInUser } from "./users.interface.js";
+import config from "../../config/config.js";
 const createUserDB = async (payload: IcreateUser) => {
   const { name, email, password, role } = payload;
   const hashPassword = await bcrypt.hash(password, 5);
@@ -39,7 +40,7 @@ const logInUserDB = async (payload: IsignInUser) => {
     email: user.email,
     role: user.role,
   };
-  const accessToken = await jwt.sign(jwtPayload, "dkgsldg", {
+  const accessToken = await jwt.sign(jwtPayload, config.jwt_secret as string, {
     expiresIn: "1d",
   });
   return { accessToken };

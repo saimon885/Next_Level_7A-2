@@ -21,9 +21,27 @@ const CreateIssus = async (req: Request, res: Response) => {
 const GetIssues = async (req: Request, res: Response) => {
   try {
     const result = await IssuService.getIssuDB();
-    res.status(201).json({
+    res.status(200).json({
       success: true,
-      messege: "issu Create Successfull.",
+      messege: "issu retrive Successfull.",
+      data: result.rows[0],
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      messege: error.message,
+      error: error,
+    });
+  }
+};
+
+const updateIssues = async (req: Request, res: Response) => {
+  const id = req.params.id;
+  const user = req.user;
+  try {
+    const result = await IssuService.updateIssuDB(req.body, Number(id), user);
+    res.status(200).json({
+      success: true,
+      messege: "issu update Successfull.",
       data: result.rows[0],
     });
   } catch (error: any) {
@@ -37,4 +55,5 @@ const GetIssues = async (req: Request, res: Response) => {
 export const IssuController = {
   CreateIssus,
   GetIssues,
+  updateIssues,
 };

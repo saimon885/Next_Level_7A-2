@@ -10,4 +10,9 @@ router.post(
   IssuController.CreateIssus,
 );
 router.get("/", auth(Role.maintainer), IssuController.GetIssues);
+router.put(
+  "/:id",
+  auth(Role.maintainer, Role.contributor),
+  IssuController.updateIssues,
+);
 export const issuRoutes = router;

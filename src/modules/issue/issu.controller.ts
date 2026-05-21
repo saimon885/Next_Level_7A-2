@@ -18,6 +18,23 @@ const CreateIssus = async (req: Request, res: Response) => {
   }
 };
 
+const GetIssues = async (req: Request, res: Response) => {
+  try {
+    const result = await IssuService.getIssuDB();
+    res.status(201).json({
+      success: true,
+      messege: "issu Create Successfull.",
+      data: result.rows[0],
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      messege: error.message,
+      error: error,
+    });
+  }
+};
+
 export const IssuController = {
   CreateIssus,
+  GetIssues,
 };

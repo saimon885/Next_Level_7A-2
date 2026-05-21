@@ -16,6 +16,12 @@ const createIssuForDB = async (payload: any, reporter_id: number) => {
   return result;
 };
 
+const getIssuDB = async () => {
+  const result = await pool.query(`SELECT * FROM issues`);
+  return result;
+};
+
 export const IssuService = {
   createIssuForDB,
+  getIssuDB,
 };

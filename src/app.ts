@@ -3,8 +3,11 @@ import express, {
   type Request,
   type Response,
 } from "express";
+import { userRoutes } from "./modules/auth/users.routes.js";
 export const app: Application = express();
-
+app.use(express.json());
 app.get("/", (req: Request, res: Response) => {
-  res.send("Hello World!");
+  res.send("welcome to express server!");
 });
+
+app.use("/api/auth", userRoutes);

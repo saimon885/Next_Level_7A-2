@@ -23,7 +23,8 @@ export const initDB = async () => {
     await pool.query(`CREATE TABLE IF NOT EXISTS issues(
         id SERIAL PRIMARY KEY,
         title VARCHAR(150) NOT NULL,
-        description TEXT NOT NULL,
+        description TEXT NOT NULL
+         CHECK (LENGTH(TRIM(description)) >= 20),
         type VARCHAR(30) NOT NULL
          CHECK(type IN('bug', 'feature_request')),
         status VARCHAR(30) DEFAULT 'open' NOT NULL

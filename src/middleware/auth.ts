@@ -29,7 +29,7 @@ export const auth = (...role: string[]) => {
       if (!user) {
         return res.status(404).json({
           success: false,
-          messege: "User not found",
+          messege: "User not found!",
         });
       }
       if (role.length && !role.includes(user.role)) {

@@ -57,6 +57,21 @@ const updateIssuDB = async (payload: Iissu, id: number, user: JwtPayload) => {
   if (!issue) {
     throw new Error("Issue not found");
   }
+  if (issue.status === "resolved") {
+    throw new Error("Resolved issue status cannot be changed");
+  }
+  if (status) {
+    if (
+      issue.status === "open" &&
+      !["in_progress", "resolved"].includes(status)
+    ) {
+      throw new Error("Open issue can only move to in_progress or resolved");
+    }
+    if (issue.status === "in_progress" && status !== "resolved") {
+      throw new Error("In progress issue can only move to resolved");
+    }
+  }
+  
   if (user.role === "contributor" && issue.reporter_id !== user.id) {
     throw new Error("Forbidden! You can update only your own issue");
   }
@@ -77,6 +92,7 @@ const updateIssuDB = async (payload: Iissu, id: number, user: JwtPayload) => {
 
     return result;
   }
+
   const result = await pool.query(
     `UPDATE issues
      SET
@@ -88,7 +104,6 @@ const updateIssuDB = async (payload: Iissu, id: number, user: JwtPayload) => {
      RETURNING *`,
     [title, description, type, id],
   );
-
   return result;
 };
 

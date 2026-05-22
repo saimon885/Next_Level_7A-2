@@ -5,13 +5,14 @@ import type { IcreateUser, IsignInUser } from "./users.interface.js";
 import config from "../../config/config.js";
 const createUserDB = async (payload: IcreateUser) => {
   const { name, email, password, role } = payload;
-  const hashPassword = await bcrypt.hash(password, 5);
+  const hashPassword = await bcrypt.hash(password, 10);
   const result = await pool.query(
     `INSERT INTO users(name,email,password,role)
     VALUES($1,$2,$3,COALESCE($4,'contributor')) RETURNING *
     `,
     [name, email, hashPassword, role],
   );
+  delete result.rows[0].password;
   return result;
 };
 
@@ -41,9 +42,9 @@ const logInUserDB = async (payload: IsignInUser) => {
     role: user.role,
   };
   const accessToken = await jwt.sign(jwtPayload, config.jwt_secret as string, {
-    expiresIn: "1d",
+    expiresIn: "6d",
   });
-  return { accessToken };
+  return { accessToken, user };
 };
 export const userService = {
   createUserDB,

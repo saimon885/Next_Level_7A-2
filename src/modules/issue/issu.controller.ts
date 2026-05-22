@@ -24,7 +24,31 @@ const GetIssues = async (req: Request, res: Response) => {
     res.status(200).json({
       success: true,
       messege: "issu retrive Successfull.",
-      data: result.rows[0],
+      data: result.rows,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      messege: error.message,
+      error: error,
+    });
+  }
+};
+
+const getSingleIssu = async (req: Request, res: Response) => {
+  const id = req.params.id;
+  try {
+    const result = await IssuService.getSingleIssueDB(id as string);
+    if (result.rows.length === 0) {
+      res.status(404).json({
+        success: false,
+        messege: "issu not found.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      messege: "issu retrive Successfull.",
+      data: result.rows,
     });
   } catch (error: any) {
     res.status(500).json({
@@ -55,5 +79,6 @@ const updateIssues = async (req: Request, res: Response) => {
 export const IssuController = {
   CreateIssus,
   GetIssues,
+  getSingleIssu,
   updateIssues,
 };

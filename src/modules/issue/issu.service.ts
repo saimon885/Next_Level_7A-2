@@ -23,6 +23,11 @@ const getIssuDB = async () => {
   return result;
 };
 
+const getSingleIssueDB = async (id: string) => {
+  const result = await pool.query(`SELECT * FROM issues WHERE id=$1`, [id]);
+  return result;
+};
+
 const updateIssuDB = async (payload: Iissu, id: number, user: JwtPayload) => {
   const { title, description, type, status } = payload;
 
@@ -71,5 +76,6 @@ const updateIssuDB = async (payload: Iissu, id: number, user: JwtPayload) => {
 export const IssuService = {
   createIssuForDB,
   getIssuDB,
+  getSingleIssueDB,
   updateIssuDB,
 };

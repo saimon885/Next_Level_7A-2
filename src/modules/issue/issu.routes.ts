@@ -16,5 +16,5 @@ router.put(
   auth(Role.maintainer, Role.contributor),
   IssuController.updateIssues,
 );
-router.delete("/:id",)
+router.delete("/:id", auth(Role.maintainer), IssuController.deleteIssu);
 export const issuRoutes = router;

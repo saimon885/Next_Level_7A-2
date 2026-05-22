@@ -18,8 +18,27 @@ const createIssuForDB = async (payload: Iissu, reporter_id: number) => {
   return result;
 };
 
-const getIssuDB = async () => {
-  const result = await pool.query(`SELECT * FROM issues`);
+const getIssuDB = async (query: any) => {
+  const { sort = "newest", type, status } = query;
+  let sql = `SELECT * FROM issues`;
+  const values: any[] = [];
+  const conditions: string[] = [];
+
+  if (type) {
+    values.push(type);
+    conditions.push(`type = $${values.length}`);
+  }
+  if (status) {
+    values.push(status);
+    conditions.push(`status = $${values.length}`);
+  }
+  if (conditions.length > 0) {
+    sql += ` WHERE ${conditions.join(" AND ")}`;
+  }
+  sql += ` ORDER BY created_at ${sort === "oldest" ? "ASC" : "DESC"}`;
+
+  const result = await pool.query(sql, values);
+
   return result;
 };
 
@@ -73,9 +92,14 @@ const updateIssuDB = async (payload: Iissu, id: number, user: JwtPayload) => {
   return result;
 };
 
+const issuDeleteDB = async (id: string) => {
+  const result = await pool.query(`DELETE FROM issues WHERE id=$1`, [id]);
+  return result;
+};
 export const IssuService = {
   createIssuForDB,
   getIssuDB,
   getSingleIssueDB,
   updateIssuDB,
+  issuDeleteDB,
 };

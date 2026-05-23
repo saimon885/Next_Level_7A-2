@@ -80,7 +80,10 @@ var createUserDB = async (payload) => {
   return result;
 };
 var getUserDB = async () => {
-  const result = await pool.query(`SELECT * FROM users`);
+  const result = await pool.query(`
+    SELECT id, name, email, role, created_at, updated_at 
+    FROM users
+  `);
   return result;
 };
 var logInUserDB = async (payload) => {
@@ -231,7 +234,6 @@ import { Router as Router2 } from "express";
 // src/modules/issue/issu.service.ts
 var createIssuForDB = async (payload, reporter_id) => {
   const { title, description, type, status } = payload;
-  console.log(reporter_id);
   const user = await pool.query(`SELECT * FROM users WHERE id=$1`, [
     reporter_id
   ]);
@@ -617,7 +619,9 @@ var matricsRoutes = router3;
 var app = express();
 app.use(express.json());
 app.get("/", (req, res) => {
-  res.send("welcome to express server!");
+  res.status(200).json({
+    messege: "welcome to DevPulse \u2013 Internal Issue & Feature Tracking System"
+  });
 });
 app.use("/api/auth", userRoutes);
 app.use("/api/issues", issuRoutes);

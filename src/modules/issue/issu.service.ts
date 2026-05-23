@@ -4,7 +4,7 @@ import type { FormattedIssue, Iissu, IssueQuery } from "./issu.interface.js";
 
 const createIssuForDB = async (payload: Iissu, reporter_id: number) => {
   const { title, description, type, status } = payload;
-  console.log(reporter_id);
+  // console.log(reporter_id);
   const user = await pool.query(`SELECT * FROM users WHERE id=$1`, [
     reporter_id,
   ]);

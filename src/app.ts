@@ -10,7 +10,9 @@ import { matricsRoutes } from "./modules/matrics/matrics.routes.js";
 export const app: Application = express();
 app.use(express.json());
 app.get("/", (req: Request, res: Response) => {
-  res.send("welcome to express server!");
+  res.status(200).json({
+    messege: "welcome to DevPulse – Internal Issue & Feature Tracking System",
+  });
 });
 
 app.use("/api/auth", userRoutes);

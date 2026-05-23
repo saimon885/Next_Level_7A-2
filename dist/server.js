@@ -339,19 +339,31 @@ var updateIssuDB = async (payload, id, user) => {
   if (!issue) {
     throw new Error("Issue not found");
   }
-  if (issue.status === "resolved") {
-    throw new Error("Resolved issue status cannot be changed");
+  if (user.role === "contributor") {
+    if (issue.reporter_id !== user.id) {
+      throw new Error("Forbidden! You can update only your own issue");
+    }
+    if (issue.status !== "open") {
+      throw new Error(
+        "Contributors can only update issues that are currently open"
+      );
+    }
+    if (status && status !== issue.status) {
+      throw new Error(
+        "Forbidden! Contributors are not allowed to change the issue workflow status"
+      );
+    }
   }
-  if (status) {
+  if (user.role === "maintainer" && status) {
+    if (issue.status === "resolved") {
+      throw new Error("Resolved issue status cannot be changed");
+    }
     if (issue.status === "open" && !["in_progress", "resolved"].includes(status)) {
       throw new Error("Open issue can only move to in_progress or resolved");
     }
     if (issue.status === "in_progress" && status !== "resolved") {
       throw new Error("In progress issue can only move to resolved");
     }
-  }
-  if (user.role === "contributor" && issue.reporter_id !== user.id) {
-    throw new Error("Forbidden! You can update only your own issue");
   }
   if (user.role === "maintainer") {
     const result2 = await pool.query(
@@ -461,6 +473,30 @@ var updateIssues = async (req, res) => {
       data: result.rows[0]
     });
   } catch (error) {
+    if (error.message === "Issue not found") {
+      return res.status(404).json({
+        success: false,
+        message: error.message
+      });
+    }
+    if (error.message === "In progress issue can only move to resolved" || "Open issue can only move to in_progress or resolved") {
+      return res.status(409).json({
+        success: false,
+        message: error.message
+      });
+    }
+    if (error.message === "Forbidden! You can update only your own issue") {
+      return res.status(403).json({
+        success: false,
+        message: error.message
+      });
+    }
+    if (error.message === "Forbidden! Contributors are not allowed to change the issue workflow status") {
+      return res.status(403).json({
+        success: false,
+        message: error.message
+      });
+    }
     res.status(500).json({
       success: false,
       messege: error.message,
@@ -524,6 +560,59 @@ var globlaErrorHandler = (err, req, res, next) => {
   });
 };
 
+// src/modules/matrics/matrics.routes.ts
+import { Router as Router3 } from "express";
+
+// src/modules/matrics/matrics.service.ts
+var getMatricsIssuDB = async () => {
+  const result = await pool.query(`
+    SELECT
+      (SELECT COUNT(*) FROM users) AS "totalUsers",
+      COUNT(*) AS "totalIssues",
+
+      COUNT(*) FILTER (WHERE status = 'open')
+      AS "openIssues",
+
+      COUNT(*) FILTER (WHERE status = 'in_progress')
+      AS "inProgressIssues",
+
+      COUNT(*) FILTER (WHERE status = 'resolved')
+      AS "resolvedIssues"
+
+    FROM issues
+  `);
+  return result;
+};
+var matricsService = {
+  getMatricsIssuDB
+};
+
+// src/modules/matrics/marics.controller.ts
+var getMatrics = async (req, res) => {
+  try {
+    const result = await matricsService.getMatricsIssuDB();
+    res.status(200).json({
+      success: true,
+      messege: "Metrics retrieved successfully",
+      data: result.rows[0]
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      messege: error.message,
+      error
+    });
+  }
+};
+var matricsController = {
+  getMatrics
+};
+
+// src/modules/matrics/matrics.routes.ts
+var router3 = Router3();
+router3.get("/metrics", auth(Role.maintainer), matricsController.getMatrics);
+var matricsRoutes = router3;
+
 // src/app.ts
 var app = express();
 app.use(express.json());
@@ -532,6 +621,7 @@ app.get("/", (req, res) => {
 });
 app.use("/api/auth", userRoutes);
 app.use("/api/issues", issuRoutes);
+app.use("/api", matricsRoutes);
 app.use(globlaErrorHandler);
 
 // src/server.ts

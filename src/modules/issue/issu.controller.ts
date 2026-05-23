@@ -72,6 +72,37 @@ const updateIssues = async (req: Request, res: Response) => {
       data: result.rows[0],
     });
   } catch (error: any) {
+    if (error.message === "Issue not found") {
+      return res.status(404).json({
+        success: false,
+        message: error.message,
+      });
+    }
+    if (
+      error.message === "In progress issue can only move to resolved" ||
+      "Open issue can only move to in_progress or resolved" ||
+      "Resolved issue status cannot be changed"
+    ) {
+      return res.status(409).json({
+        success: false,
+        message: error.message,
+      });
+    }
+    if (error.message === "Forbidden! You can update only your own issue") {
+      return res.status(403).json({
+        success: false,
+        message: error.message,
+      });
+    }
+    if (
+      error.message ===
+      "Forbidden! Contributors are not allowed to change the issue workflow status"
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: error.message,
+      });
+    }
     res.status(500).json({
       success: false,
       messege: error.message,
@@ -101,6 +132,7 @@ const deleteIssu = async (req: Request, res: Response) => {
     });
   }
 };
+
 export const IssuController = {
   CreateIssus,
   GetIssues,

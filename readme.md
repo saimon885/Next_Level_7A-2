@@ -103,6 +103,7 @@ DevPulse is a production-ready backend system designed to help software teams ef
 
 - `POST /api/auth/signup` → Register user
 - `POST /api/auth/login` → Login user
+- `GET /api/auth` → Get all users (only maintainer)
 
 ### Issue Routes
 
@@ -111,3 +112,7 @@ DevPulse is a production-ready backend system designed to help software teams ef
 - `GET /api/issues/:id` → Get single issue
 - `PATCH /api/issues/:id` → Update issue
 - `DELETE /api/issues/:id` → Delete issue
+
+### Matrics Routes
+
+- `GET /api/metrics` → Get all matrics only (maintainer)

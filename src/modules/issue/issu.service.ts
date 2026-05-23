@@ -133,16 +133,33 @@ const updateIssuDB = async (payload: Iissu, id: number, user: JwtPayload) => {
   const { title, description, type, status } = payload;
 
   const issueData = await pool.query(`SELECT * FROM issues WHERE id=$1`, [id]);
-
   const issue = issueData.rows[0];
-
   if (!issue) {
     throw new Error("Issue not found");
   }
-  if (issue.status === "resolved") {
-    throw new Error("Resolved issue status cannot be changed");
+
+  if (user.role === "contributor") {
+
+    if (issue.reporter_id !== user.id) {
+      throw new Error("Forbidden! You can update only your own issue");
+    }
+
+    if (issue.status !== "open") {
+      throw new Error(
+        "Contributors can only update issues that are currently open",
+      );
+    }
+
+    if (status && status !== issue.status) {
+      throw new Error(
+        "Forbidden! Contributors are not allowed to change the issue workflow status",
+      );
+    }
   }
-  if (status) {
+  if (user.role === "maintainer" && status) {
+    if (issue.status === "resolved") {
+      throw new Error("Resolved issue status cannot be changed");
+    }
     if (
       issue.status === "open" &&
       !["in_progress", "resolved"].includes(status)
@@ -153,11 +170,6 @@ const updateIssuDB = async (payload: Iissu, id: number, user: JwtPayload) => {
       throw new Error("In progress issue can only move to resolved");
     }
   }
-
-  if (user.role === "contributor" && issue.reporter_id !== user.id) {
-    throw new Error("Forbidden! You can update only your own issue");
-  }
-
   if (user.role === "maintainer") {
     const result = await pool.query(
       `UPDATE issues
@@ -193,6 +205,7 @@ const issuDeleteDB = async (id: string) => {
   const result = await pool.query(`DELETE FROM issues WHERE id=$1`, [id]);
   return result;
 };
+
 export const IssuService = {
   createIssuForDB,
   getIssuesDB,

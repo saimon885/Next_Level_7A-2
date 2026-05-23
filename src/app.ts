@@ -5,6 +5,7 @@ import express, {
 } from "express";
 import { userRoutes } from "./modules/auth/users.routes.js";
 import { issuRoutes } from "./modules/issue/issu.routes.js";
+import { globlaErrorHandler } from "./middleware/globalErrorHandler.js";
 export const app: Application = express();
 app.use(express.json());
 app.get("/", (req: Request, res: Response) => {
@@ -13,3 +14,4 @@ app.get("/", (req: Request, res: Response) => {
 
 app.use("/api/auth", userRoutes);
 app.use("/api/issues", issuRoutes);
+app.use(globlaErrorHandler);

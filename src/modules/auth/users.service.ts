@@ -41,10 +41,10 @@ const logInUserDB = async (payload: IsignInUser) => {
     email: user.email,
     role: user.role,
   };
-  const accessToken = await jwt.sign(jwtPayload, config.jwt_secret as string, {
+  const token = await jwt.sign(jwtPayload, config.jwt_secret as string, {
     expiresIn: "6d",
   });
-  return { accessToken, user };
+  return { token, user };
 };
 export const userService = {
   createUserDB,

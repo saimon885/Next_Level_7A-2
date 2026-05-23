@@ -6,11 +6,12 @@ const CreateUser = async (req: Request, res: Response) => {
     const result = await userService.createUserDB(req.body);
     res.status(201).json({
       success: true,
-      messege: "user registered successsfull.",
+      messege: "User registered successsfull.",
       data: result.rows[0],
     });
   } catch (error: any) {
     res.status(500).json({
+      success: false,
       messege: error.message,
       error: error,
     });
@@ -26,6 +27,7 @@ const getUser = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     res.status(500).json({
+      success: false,
       messege: error.message,
       error: error,
     });
@@ -38,11 +40,12 @@ const LogInUser = async (req: Request, res: Response) => {
     delete result.user.password;
     res.status(200).json({
       success: true,
-      messege: "user Login successsfull.",
+      messege: "Login successsful.",
       data: result,
     });
   } catch (error: any) {
     res.status(500).json({
+      success: false,
       messege: error.message,
       error: error,
     });

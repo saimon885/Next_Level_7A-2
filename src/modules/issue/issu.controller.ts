@@ -7,11 +7,12 @@ const CreateIssus = async (req: Request, res: Response) => {
     const result = await IssuService.createIssuForDB(req.body, Number(id));
     res.status(201).json({
       success: true,
-      messege: "issu Create Successfull.",
+      messege: "Issu Created Successfully.",
       data: result.rows[0],
     });
   } catch (error: any) {
     res.status(500).json({
+      success: false,
       messege: error.message,
       error: error,
     });
@@ -20,14 +21,15 @@ const CreateIssus = async (req: Request, res: Response) => {
 
 const GetIssues = async (req: Request, res: Response) => {
   try {
-    const result = await IssuService.getIssuDB(req.query);
+    const result = await IssuService.getIssuesDB(req.query);
     res.status(200).json({
       success: true,
-      messege: "issu retrive Successfull.",
-      data: result.rows,
+      messege: "issues retrive Successfull.",
+      data: result,
     });
   } catch (error: any) {
     res.status(500).json({
+      success: false,
       messege: error.message,
       error: error,
     });
@@ -38,7 +40,7 @@ const getSingleIssu = async (req: Request, res: Response) => {
   const id = req.params.id;
   try {
     const result = await IssuService.getSingleIssueDB(id as string);
-    if (result.rows.length === 0) {
+    if (!result) {
       res.status(404).json({
         success: false,
         messege: "issu not found.",
@@ -47,11 +49,12 @@ const getSingleIssu = async (req: Request, res: Response) => {
 
     res.status(200).json({
       success: true,
-      messege: "issu retrive Successfull.",
-      data: result.rows,
+      messege: "issues retrive Successfull.",
+      data: result,
     });
   } catch (error: any) {
     res.status(500).json({
+      success: false,
       messege: error.message,
       error: error,
     });
@@ -70,6 +73,7 @@ const updateIssues = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     res.status(500).json({
+      success: false,
       messege: error.message,
       error: error,
     });
@@ -91,6 +95,7 @@ const deleteIssu = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     res.status(500).json({
+      success: false,
       messege: error.message,
       error: error,
     });

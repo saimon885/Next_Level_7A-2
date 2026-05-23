@@ -36,7 +36,7 @@ export const initDB = async () => {
 
         )`);
 
-    console.log("Users table created successfully");
+    console.log("database connected successfull");
   } catch (error) {
     console.error("Database creation failed:", error);
   }

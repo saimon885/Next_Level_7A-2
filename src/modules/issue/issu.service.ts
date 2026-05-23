@@ -1,6 +1,6 @@
 import type { JwtPayload } from "jsonwebtoken";
 import { pool } from "../../db/db.js";
-import type { Iissu } from "./issu.interface.js";
+import type { FormattedIssue, Iissu, IssueQuery } from "./issu.interface.js";
 
 const createIssuForDB = async (payload: Iissu, reporter_id: number) => {
   const { title, description, type, status } = payload;
@@ -18,33 +18,115 @@ const createIssuForDB = async (payload: Iissu, reporter_id: number) => {
   return result;
 };
 
-const getIssuDB = async (query: any) => {
+const getIssuesDB = async (query: IssueQuery): Promise<FormattedIssue[]> => {
   const { sort = "newest", type, status } = query;
-  let sql = `SELECT * FROM issues`;
-  const values: any[] = [];
-  const conditions: string[] = [];
+
+  const queryValues: string[] = [];
+  const filterConditions: string[] = [];
 
   if (type) {
-    values.push(type);
-    conditions.push(`type = $${values.length}`);
+    queryValues.push(type);
+    filterConditions.push(`type = $${queryValues.length}`);
   }
+
   if (status) {
-    values.push(status);
-    conditions.push(`status = $${values.length}`);
+    queryValues.push(status);
+    filterConditions.push(`status = $${queryValues.length}`);
   }
-  if (conditions.length > 0) {
-    sql += ` WHERE ${conditions.join(" AND ")}`;
+
+  const whereClause =
+    filterConditions.length > 0
+      ? `WHERE ${filterConditions.join(" AND ")}`
+      : "";
+
+  const sortOrder = sort === "oldest" ? "ASC" : "DESC";
+
+  const issueQuery = `
+    SELECT *
+    FROM issues
+    ${whereClause}
+    ORDER BY created_at ${sortOrder}
+  `;
+
+  const issueResult = await pool.query(issueQuery, queryValues);
+
+  const issues = issueResult.rows;
+
+  if (issues.length === 0) {
+    return [];
   }
-  sql += ` ORDER BY created_at ${sort === "oldest" ? "ASC" : "DESC"}`;
 
-  const result = await pool.query(sql, values);
+  const reporterIds = [...new Set(issues.map((issue) => issue.reporter_id))];
 
-  return result;
+  const userResult = await pool.query(
+    `
+      SELECT id, name, role
+      FROM users
+      WHERE id = ANY($1)
+    `,
+    [reporterIds],
+  );
+
+  const users = userResult.rows;
+
+  const usersMap = new Map(users.map((user) => [user.id, user]));
+
+  const formattedIssues = issues.map((issue) => {
+    const reporter = usersMap.get(issue.reporter_id);
+
+    return {
+      id: issue.id,
+      title: issue.title,
+      description: issue.description,
+      type: issue.type,
+      status: issue.status,
+      reporter: {
+        id: reporter?.id,
+        name: reporter?.name,
+        role: reporter?.role,
+      },
+      created_at: issue.created_at,
+      updated_at: issue.updated_at,
+    };
+  });
+
+  return formattedIssues;
 };
+const getSingleIssueDB = async (id: string): Promise<FormattedIssue | null> => {
+  const { rows: issues } = await pool.query(
+    `SELECT * FROM issues WHERE id = $1`,
+    [id],
+  );
 
-const getSingleIssueDB = async (id: string) => {
-  const result = await pool.query(`SELECT * FROM issues WHERE id=$1`, [id]);
-  return result;
+  const issue = issues[0];
+
+  if (!issue) {
+    return null;
+  }
+
+  const { rows: users } = await pool.query(
+    `
+    SELECT id, name, role
+    FROM users
+    WHERE id = $1
+  `,
+    [issue.reporter_id],
+  );
+  const reporter = users[0];
+  return {
+    id: issue.id,
+    title: issue.title,
+    description: issue.description,
+    type: issue.type,
+    status: issue.status,
+    reporter: {
+      id: reporter?.id,
+      name: reporter?.name,
+      role: reporter?.role,
+    },
+    created_at: issue.created_at,
+    updated_at: issue.updated_at,
+  };
 };
 
 const updateIssuDB = async (payload: Iissu, id: number, user: JwtPayload) => {
@@ -71,7 +153,7 @@ const updateIssuDB = async (payload: Iissu, id: number, user: JwtPayload) => {
       throw new Error("In progress issue can only move to resolved");
     }
   }
-  
+
   if (user.role === "contributor" && issue.reporter_id !== user.id) {
     throw new Error("Forbidden! You can update only your own issue");
   }
@@ -113,7 +195,7 @@ const issuDeleteDB = async (id: string) => {
 };
 export const IssuService = {
   createIssuForDB,
-  getIssuDB,
+  getIssuesDB,
   getSingleIssueDB,
   updateIssuDB,
   issuDeleteDB,
